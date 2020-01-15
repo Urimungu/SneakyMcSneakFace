@@ -6,6 +6,7 @@ public class CameraMovement : MonoBehaviour
 {
     //References
     private Transform Target;
+    private Transform TF;
 
     public bool CanMove = true;
     public float Speed = 10;
@@ -13,13 +14,14 @@ public class CameraMovement : MonoBehaviour
     void Start() {
         //Finds the player from the Game Manager
         Target = GameManager.GM.Player.transform;
+        TF = GetComponent<Transform>();
     }
 
     private void Update()
     {
         //Follows the player if able to move
         if (CanMove) {
-            transform.position = Vector3.Slerp(transform.position, Target.position, Speed / 10);
+            TF.position = Vector3.Slerp(transform.position, Target.position, Speed / 10);
         }
     }
 
