@@ -5178,6 +5178,36 @@ Transform:
   m_Father: {fileID: 98934359}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &529987785
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 529987786}
+  m_Layer: 0
+  m_Name: Enemy (1) Point (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 7250588514170254948, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &529987786
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 529987785}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.15, y: 3.04, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1081800201}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &536628475
 GameObject:
   m_ObjectHideFlags: 0
@@ -9049,6 +9079,36 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &891639397
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 891639398}
+  m_Layer: 0
+  m_Name: Enemy (1) Point (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 7250588514170254948, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &891639398
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891639397}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.97, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1081800201}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &900199761
 GameObject:
   m_ObjectHideFlags: 0
@@ -10875,9 +10935,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1075761455}
-  - component: {fileID: 1075761454}
-  - component: {fileID: 1075761453}
   - component: {fileID: 1075761452}
+  - component: {fileID: 1075761453}
+  - component: {fileID: 1075761454}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -10899,6 +10959,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Walking: {fileID: 21300086, guid: 3fd9c8aea2a29b44a88a36b0ecf47c0a, type: 3}
   Chasing: {fileID: 21300062, guid: 3fd9c8aea2a29b44a88a36b0ecf47c0a, type: 3}
+  Speed: 1
+  SpeedCap: 10
+  runSpeedCap: 10
+  stopTime: 3
+  RotationSpeed: 10
+  searchPoint:
+  - {fileID: 1168750174}
+  - {fileID: 891639398}
+  - {fileID: 529987786}
+  target: {fileID: 0}
 --- !u!50 &1075761453
 Rigidbody2D:
   serializedVersion: 4
@@ -10919,9 +10989,9 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
---- !u!58 &1075761454
-CircleCollider2D:
+  m_Constraints: 4
+--- !u!70 &1075761454
+CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -10933,9 +11003,9 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  serializedVersion: 2
-  m_Radius: 0.5
+  m_Offset: {x: -0.046151876, y: 0}
+  m_Size: {x: 0.37308216, y: 0.86154413}
+  m_Direction: 0
 --- !u!4 &1075761455
 Transform:
   m_ObjectHideFlags: 0
@@ -10944,7 +11014,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1075761451}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.69193, y: -0.5134262, z: -0.18502598}
+  m_LocalPosition: {x: 5.87, y: -2.47, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1361472372}
@@ -11030,6 +11100,39 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1081800200
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1081800201}
+  m_Layer: 0
+  m_Name: PatrolLocations
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1081800201
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1081800200}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.5136926, y: -0.7595396, z: -0.22460938}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1168750174}
+  - {fileID: 891639398}
+  - {fileID: 529987786}
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1083569031
 GameObject:
   m_ObjectHideFlags: 0
@@ -11741,6 +11844,36 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1168750173
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1168750174}
+  m_Layer: 0
+  m_Name: Enemy (1) Point (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 7250588514170254948, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1168750174
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168750173}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -2.66, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1081800201}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1178614270
 GameObject:
   m_ObjectHideFlags: 0
@@ -12382,9 +12515,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1263355509}
-  - component: {fileID: 1263355508}
   - component: {fileID: 1263355507}
   - component: {fileID: 1263355506}
+  - component: {fileID: 1263355508}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -12430,8 +12563,8 @@ MonoBehaviour:
   StopSpeed: 10
   RotateSpeed: 5
   CanMove: 1
---- !u!58 &1263355508
-CircleCollider2D:
+--- !u!70 &1263355508
+CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -12443,9 +12576,9 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  serializedVersion: 2
-  m_Radius: 0.5
+  m_Offset: {x: 0.0035941561, y: -0.035942797}
+  m_Size: {x: 0.8634194, y: 0.39616728}
+  m_Direction: 1
 --- !u!4 &1263355509
 Transform:
   m_ObjectHideFlags: 0
