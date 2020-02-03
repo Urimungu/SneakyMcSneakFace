@@ -1,38 +1,46 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEditor;
 
 public class EnemyController : MonoBehaviour
 {
     //References
     public Sprite Walking, Chasing;
-    private Transform TF;
+    private Transform EnemyTransform;
     private Rigidbody2D rb2d;
 
     //Stats
-    public float Speed = 10;
-    public float SpeedCap = 10;
-    public float runSpeedCap = 10;
+    public float Speed = 10, RunSpeed = 15;
+    public float HearRadius;
+    public float SearchTime;
     public float stopTime = 3;
     public float RotationSpeed = 10;
 
 
     //States
     public enum States { Patrol, Chase, Searching };
-    public List<Transform> searchPoint = new List<Transform>();
+    public List<Vector3> SearchPoint = new List<Vector3>();
 
     //Misc
     private States state;
-    private bool isRunning = false;
-    private bool isChasing = false;
-    private bool inRange = false;
-    public Transform target;
+    private bool isRunning;
+    private bool isChasing;
+    private bool inRange;
+    public Vector3 target;
     private float timer;
 
     private void Awake() {
+        //Sets the References
         rb2d = GetComponent<Rigidbody2D>();
-        TF = transform;
+        EnemyTransform = transform;
         state = States.Patrol;
-        target = searchPoint[0];
+
+        //Checks to make sure that the points exist first
+        if (transform.Find("PatrolLocations") == null)
+            return;
+
+        GetSearchPoints(transform.Find("PatrolLocations"));
+        target = SearchPoint[0];
     }
 
     private void Update() {
@@ -44,56 +52,90 @@ public class EnemyController : MonoBehaviour
         switch (state) {
             case States.Patrol:
                 Patrol();
+                //Stop timer
+                if(timer < Time.time)
+                    Movement();
                 break;
             case States.Searching:
+                Searching();
                 break;
             case States.Chase:
                 break;
         }
-        //TF.GetChild(0).GetComponent<SpriteRenderer>().sprite = isChasing ? Chasing : Walking;
+    }
+
+    //Looks around for the player, of he sees him then start following
+    private void Searching() {
+        //If the player wasn't spotted in the amount of time
+        if (timer < Time.time) {
+            transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Walking;
+            state = States.Patrol;
+        }
     }
 
     private void Patrol() {
-        if(inRange) {
-            //Chooses a new target from the list and makes sure it's not the one that was already selected
-            int randomLocation = Random.Range(0, searchPoint.Count);
-            if(target == searchPoint[randomLocation] && searchPoint.Count > 0) {
-                if(randomLocation == 0)
-                    randomLocation = 1;
-                else if(randomLocation == searchPoint.Count - 1)
-                    randomLocation = 0;
-                else
-                    ++randomLocation;
-            }
+        //Don't run if there is no positions to move to
+        if (SearchPoint.Count == 0)
+            return;
 
+        //In range of Locator
+        if(inRange) {
             //Sets the location
-            target = searchPoint[randomLocation];
+            target = SearchPoint[DontOverLap(SearchPoint.Count)];
             inRange = false;
         }
-        if(timer < Time.time)
-            Movement();
+
+        if (GameManager.Manager == null || GameManager.Manager.Player == null)
+            return;
+
+
+        if ((EnemyTransform.position - GameManager.Manager.Player.transform.position).magnitude <= HearRadius) {
+            timer = Time.time + SearchTime;
+
+            //Stops the Enemy
+            rb2d.velocity = new Vector2(0, 0);
+            Vector2 newDirection = (GameManager.Manager.Player.transform.position - EnemyTransform.position).normalized;
+            EnemyTransform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg);
+
+            state = States.Searching;
+            transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Chasing;
+        }
     }
 
     private void Movement() {
         //Look at target and moves towards it
-        Vector2 newPos = target.position - TF.position;
+        Vector2 newDirection = (target - EnemyTransform.position).normalized;
 
-        float angle = Mathf.Atan2(newPos.y, newPos.x) * Mathf.Rad2Deg;
-        TF.rotation = Quaternion.AngleAxis(Mathf.LerpAngle(TF.eulerAngles.magnitude, angle, 0.1f), Vector3.forward);
+        //Moves the player and faces the direction
+        rb2d.velocity = newDirection * (isRunning ? RunSpeed : Speed);
+        EnemyTransform.rotation = Quaternion.Euler(0, 0 , Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg);
 
-        rb2d.AddForce(TF.right * Speed);
-
-        //Provides a counter speed to slow the enemy down
-        if (Mathf.Abs(rb2d.velocity.magnitude) > (isRunning ? runSpeedCap : SpeedCap)) {
-            rb2d.AddForce(-rb2d.velocity.normalized * (isRunning ? runSpeedCap : SpeedCap));
-        }
-
-        //Slows down if it gets in range with its target
-        if (Mathf.Abs((target.position - TF.position).magnitude) < 0.5f && Mathf.Abs(rb2d.velocity.magnitude) > 0.1f) {
+        //Stops if it gets in range with its target
+        if ((target - EnemyTransform.position).magnitude < 0.5f) {
             rb2d.velocity = Vector3.zero;
-            rb2d.AddForce(-rb2d.velocity.normalized * stopTime);
-            timer = Time.time + Random.Range(2f, 6f);
+            timer = Time.time + Random.Range(2f, stopTime);
             inRange = true;
         }
+    }
+
+    //Makes sure the Values Wrap around and don't return the same number
+    private int DontOverLap(int max) {
+        int randomLocation = Random.Range(0, max);
+        if(randomLocation == 0)
+            return 1;
+        if(randomLocation == SearchPoint.Count - 1)
+            return 0;
+
+        return ++randomLocation;
+    }
+
+    //References all of the Children and adds them to the Vector3 List
+    private void GetSearchPoints(Transform holder) {
+        //Gets all of the positions and saves them
+        for (int i = 0; i < holder.childCount; i++)
+            SearchPoint.Add(new Vector3(holder.GetChild(i).position.x, 0, holder.GetChild(i).position.z));
+
+        //Destroys the Object so it doesn't skew the information
+        Destroy(holder.gameObject);
     }
 }
