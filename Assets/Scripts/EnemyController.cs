@@ -5,7 +5,7 @@ using UnityEditor;
 public class EnemyController : MonoBehaviour
 {
     //References
-    public Sprite Walking, Chasing;
+    public Sprite Walking, Chasing, Gun;
     private Transform EnemyTransform;
     private Rigidbody2D rb2d;
 
@@ -16,6 +16,10 @@ public class EnemyController : MonoBehaviour
     public float stopTime = 3;
     public float RotationSpeed = 10;
 
+    //View Distance
+    public float ViewDistance = 3;
+    public float ViewAngle = 45;        //Degrees
+    public LayerMask ViewLayerMask;
 
     //States
     public enum States { Patrol, Chase, Searching };
@@ -60,17 +64,66 @@ public class EnemyController : MonoBehaviour
                 Searching();
                 break;
             case States.Chase:
+                Chase();
                 break;
         }
     }
 
+    private void Chase(){
+        //Face at the players
+        Vector2 newDirection = (GameManager.Manager.Player.transform.position - EnemyTransform.position).normalized;
+        EnemyTransform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg);
+
+    }
+
     //Looks around for the player, of he sees him then start following
-    private void Searching() {
+    private void Searching()
+    {
+        //Checks for the player
+        if (DetectPlayer()) {
+            transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Gun;
+            state = States.Chase;
+            return;
+        }
+
         //If the player wasn't spotted in the amount of time
         if (timer < Time.time) {
             transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Walking;
             state = States.Patrol;
         }
+    }
+
+    //Raycasts towards the player
+    private bool DetectPlayer() {
+        //Detects if the player is in front of the enemy
+        RaycastHit2D hit = Physics2D.Raycast(EnemyTransform.position, EnemyTransform.right, ViewDistance, ViewLayerMask);
+        if (hit.collider.tag == "Player")
+            return true;
+
+        //Detects if the player is far right
+        hit = Physics2D.Raycast(EnemyTransform.position, (EnemyTransform.right + (EnemyTransform.up / ViewAngle)), ViewDistance, ViewLayerMask);
+        if(hit.collider != null && hit.collider.tag == "Player")
+            return true;
+
+        //Detects if the player is far left
+        hit = Physics2D.Raycast(EnemyTransform.position, (EnemyTransform.right - (EnemyTransform.up / ViewAngle)), ViewDistance, ViewLayerMask);
+        if(hit.collider != null && hit.collider.tag == "Player")
+            return true;
+
+        //Detects if the player is mid-right
+        hit = Physics2D.Raycast(EnemyTransform.position, (EnemyTransform.right + (EnemyTransform.up / ViewAngle / 2)), ViewDistance, ViewLayerMask);
+        if(hit.collider != null && hit.collider.tag == "Player")
+            return true;
+
+        //Detects if the player is mid-left
+        hit = Physics2D.Raycast(EnemyTransform.position, (EnemyTransform.right - (EnemyTransform.up / ViewAngle / 2)), ViewDistance, ViewLayerMask);
+        if(hit.collider != null && hit.collider.tag == "Player")
+            return true;
+
+        print(hit.collider.name);
+
+        //The player was not detected
+        return false;
     }
 
     private void Patrol() {
@@ -85,10 +138,11 @@ public class EnemyController : MonoBehaviour
             inRange = false;
         }
 
+        //Breaks if there isn't a player or game manager in the scene so the game doesn't crash
         if (GameManager.Manager == null || GameManager.Manager.Player == null)
             return;
 
-
+        //If the player gets too close
         if ((EnemyTransform.position - GameManager.Manager.Player.transform.position).magnitude <= HearRadius) {
             timer = Time.time + SearchTime;
 
@@ -97,6 +151,8 @@ public class EnemyController : MonoBehaviour
             Vector2 newDirection = (GameManager.Manager.Player.transform.position - EnemyTransform.position).normalized;
             EnemyTransform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg);
 
+
+            //Changes state and sprite
             state = States.Searching;
             transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Chasing;
         }
