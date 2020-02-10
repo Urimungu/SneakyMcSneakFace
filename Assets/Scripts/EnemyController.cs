@@ -14,7 +14,6 @@ public class EnemyController : MonoBehaviour
     public float HearRadius;
     public float SearchTime;
     public float stopTime = 3;
-    public float RotationSpeed = 10;
 
     //View Distance
     public float ViewDistance = 3;
@@ -30,8 +29,10 @@ public class EnemyController : MonoBehaviour
     private bool isRunning;
     private bool isChasing;
     private bool inRange;
-    public Vector3 target;
     private float timer;
+    private Vector3 target;
+    private Vector3 playerLastPos;
+
 
     private void Awake() {
         //Sets the References
@@ -77,8 +78,12 @@ public class EnemyController : MonoBehaviour
     }
 
     //Looks around for the player, of he sees him then start following
-    private void Searching()
-    {
+    private void Searching() {
+        //Looks at the Player's direction
+        Vector2 newDirection = (playerLastPos - EnemyTransform.position).normalized;
+        var slowRotation = Mathf.LerpAngle(EnemyTransform.eulerAngles.z, Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg, 0.3f);
+        EnemyTransform.rotation = Quaternion.Euler(0, 0, slowRotation);
+
         //Checks for the player
         if (DetectPlayer()) {
             transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Gun;
@@ -97,7 +102,7 @@ public class EnemyController : MonoBehaviour
     private bool DetectPlayer() {
         //Detects if the player is in front of the enemy
         RaycastHit2D hit = Physics2D.Raycast(EnemyTransform.position, EnemyTransform.right, ViewDistance, ViewLayerMask);
-        if (hit.collider.tag == "Player")
+        if (hit.collider != null && hit.collider.tag == "Player")
             return true;
 
         //Detects if the player is far right
@@ -120,8 +125,6 @@ public class EnemyController : MonoBehaviour
         if(hit.collider != null && hit.collider.tag == "Player")
             return true;
 
-        print(hit.collider.name);
-
         //The player was not detected
         return false;
     }
@@ -142,15 +145,19 @@ public class EnemyController : MonoBehaviour
         if (GameManager.Manager == null || GameManager.Manager.Player == null)
             return;
 
-        //If the player gets too close
-        if ((EnemyTransform.position - GameManager.Manager.Player.transform.position).magnitude <= HearRadius) {
+        //Checks for the player
+        var hit = Physics2D.Raycast(EnemyTransform.position,
+            (EnemyTransform.position - GameManager.Manager.Player.transform.position).normalized, HearRadius);
+
+        //If the enemy hears the player by getting to close. If the player is behind a wall, he will get alerted
+        if ((EnemyTransform.position - GameManager.Manager.Player.transform.position).magnitude <= HearRadius &&
+            (GameManager.Manager.Player.GetComponent<Rigidbody2D>().velocity.magnitude > 0.1f ||
+            (hit.collider != null && hit.collider.CompareTag("Player")))) {
             timer = Time.time + SearchTime;
 
             //Stops the Enemy
             rb2d.velocity = new Vector2(0, 0);
-            Vector2 newDirection = (GameManager.Manager.Player.transform.position - EnemyTransform.position).normalized;
-            EnemyTransform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg);
-
+            playerLastPos = GameManager.Manager.Player.transform.position;
 
             //Changes state and sprite
             state = States.Searching;
@@ -164,7 +171,8 @@ public class EnemyController : MonoBehaviour
 
         //Moves the player and faces the direction
         rb2d.velocity = newDirection * (isRunning ? RunSpeed : Speed);
-        EnemyTransform.rotation = Quaternion.Euler(0, 0 , Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg);
+        var slowRotation = Mathf.LerpAngle(EnemyTransform.eulerAngles.z, Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg, 0.3f);
+        EnemyTransform.rotation = Quaternion.Euler(0, 0, slowRotation);
 
         //Stops if it gets in range with its target
         if ((target - EnemyTransform.position).magnitude < 0.5f) {
@@ -189,7 +197,7 @@ public class EnemyController : MonoBehaviour
     private void GetSearchPoints(Transform holder) {
         //Gets all of the positions and saves them
         for (int i = 0; i < holder.childCount; i++)
-            SearchPoint.Add(new Vector3(holder.GetChild(i).position.x, 0, holder.GetChild(i).position.z));
+            SearchPoint.Add(new Vector3(holder.GetChild(i).position.x, holder.GetChild(i).position.y, holder.GetChild(i).position.z));
 
         //Destroys the Object so it doesn't skew the information
         Destroy(holder.gameObject);
