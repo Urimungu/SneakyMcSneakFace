@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using UnityEditor;
+using Random = UnityEngine.Random;
 
-public class EnemyController : MonoBehaviour
-{
+public class EnemyController : MonoBehaviour {
     //References
     public Sprite Walking, Chasing, Gun;
     private Transform EnemyTransform;
@@ -22,13 +21,16 @@ public class EnemyController : MonoBehaviour
 
     //States
     public enum States { Patrol, Chase, Searching };
-    public List<Vector3> SearchPoint = new List<Vector3>();
+    public List<List<Vector3>> SearchPoint = new List<List<Vector3>>();
 
     //Misc
     private States state;
     private bool isRunning;
     private bool isChasing;
     private bool inRange;
+    private bool movingForward = true;
+    private int currentPath;
+    private int pathState;
     private float timer;
     private Vector3 target;
     private Vector3 playerLastPos;
@@ -45,7 +47,7 @@ public class EnemyController : MonoBehaviour
             return;
 
         GetSearchPoints(transform.Find("PatrolLocations"));
-        target = SearchPoint[0];
+        target = SearchPoint[0][0];
     }
 
     private void Update() {
@@ -137,7 +139,7 @@ public class EnemyController : MonoBehaviour
         //In range of Locator
         if(inRange) {
             //Sets the location
-            target = SearchPoint[DontOverLap(SearchPoint.Count)];
+            GetNextLocation();
             inRange = false;
         }
 
@@ -152,7 +154,7 @@ public class EnemyController : MonoBehaviour
         //If the enemy hears the player by getting to close. If the player is behind a wall, he will get alerted
         if ((EnemyTransform.position - GameManager.Manager.Player.transform.position).magnitude <= HearRadius &&
             (GameManager.Manager.Player.GetComponent<Rigidbody2D>().velocity.magnitude > 0.1f ||
-            (hit.collider != null && hit.collider.CompareTag("Player")))) {
+            hit.collider != null && hit.collider.CompareTag("Player"))) {
             timer = Time.time + SearchTime;
 
             //Stops the Enemy
@@ -183,21 +185,60 @@ public class EnemyController : MonoBehaviour
     }
 
     //Makes sure the Values Wrap around and don't return the same number
-    private int DontOverLap(int max) {
-        int randomLocation = Random.Range(0, max);
-        if(randomLocation == 0)
-            return 1;
-        if(randomLocation == SearchPoint.Count - 1)
-            return 0;
+    private void GetNextLocation() {
+        //Goes forwards
+        if ((movingForward && Random.Range(0, 100) > 15) || pathState == 0) {
+            //If hasn't reached the end of the list
+            if(SearchPoint[currentPath].Count - 1 != pathState)
+                pathState += 1;
+            else {
+                movingForward = false;
+                pathState -= 1;
+            }
 
-        return ++randomLocation;
+            target = SearchPoint[currentPath][pathState];
+            return;
+        }
+
+        //Got back to the start of the room
+        if(pathState == 1) {
+            movingForward = true;
+            currentPath = Random.Range(0, SearchPoint.Count);
+            pathState = 0;
+
+            target = SearchPoint[currentPath][pathState];
+            return;
+        }
+
+
+        //Goes backwards
+        if(Random.Range(0, 100) > 20)
+            pathState -= 1;
+        else
+            pathState += 1;
+
+        target = SearchPoint[currentPath][pathState];
     }
 
     //References all of the Children and adds them to the Vector3 List
     private void GetSearchPoints(Transform holder) {
+        List<string> names = new List<string>();
         //Gets all of the positions and saves them
-        for (int i = 0; i < holder.childCount; i++)
-            SearchPoint.Add(new Vector3(holder.GetChild(i).position.x, holder.GetChild(i).position.y, holder.GetChild(i).position.z));
+        for (int i = 0; i < holder.childCount; i++) {
+
+            //If the path already exists then add on to it
+            var index = holder.GetChild(i).name.Contains(" ") ? holder.GetChild(i).name.IndexOf(" ") : holder.GetChild(i).name.Length;
+            string title = holder.GetChild(i).name.Substring(0, index);
+            if (names.Contains(title)) {
+                SearchPoint[names.IndexOf(title)].Add(holder.GetChild(i).position);
+                continue;
+            }
+
+            //If that path doesn't exist then add a new one
+            names.Add(title);
+            SearchPoint.Add(new List<Vector3>{ holder.GetChild(i).position});
+
+        }
 
         //Destroys the Object so it doesn't skew the information
         Destroy(holder.gameObject);
