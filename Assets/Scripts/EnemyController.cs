@@ -90,12 +90,15 @@ public class EnemyController : MonoBehaviour {
         if (DetectPlayer()) {
             transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Gun;
             state = States.Chase;
+            GameManager.Manager.Heard--;
+            GameManager.Manager.Spotters++;
             return;
         }
 
         //If the player wasn't spotted in the amount of time
         if (timer < Time.time) {
             transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Walking;
+            GameManager.Manager.Heard--;
             state = States.Patrol;
         }
     }
@@ -163,6 +166,7 @@ public class EnemyController : MonoBehaviour {
 
             //Changes state and sprite
             state = States.Searching;
+            GameManager.Manager.Heard++;
             transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Chasing;
         }
     }
