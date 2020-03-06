@@ -178,29 +178,42 @@ public class EnemyController : MonoBehaviour {
             _inRange = false;
         }
 
-        //Breaks if there isn't a player or game manager in the scene so the game doesn't crash
+        //Breaks if there isn't a player or game manager in the scene so the game doesn't crash 
         if (GameManager.Manager == null || GameManager.Manager.Player == null)
             return;
 
         //Checks for the player
-        var hit = Physics2D.Raycast(_enemyTransform.position,
-            (_enemyTransform.position - GameManager.Manager.Player.transform.position).normalized, HearRadius);
+        var hit = Physics2D.Raycast(_enemyTransform.position, (_enemyTransform.position - GameManager.Manager.Player.transform.position).normalized, HearRadius);
 
         //If the enemy hears the player by getting to close. If the player is behind a wall, he will get alerted
-        if ((_enemyTransform.position - GameManager.Manager.Player.transform.position).magnitude <= HearRadius &&
-            (GameManager.Manager.Player.GetComponent<Rigidbody2D>().velocity.magnitude > 0.1f ||
-            hit.collider != null && hit.collider.CompareTag("Player"))) {
+        if ((_enemyTransform.position - GameManager.Manager.Player.transform.position).magnitude <= HearRadius) {
             _timer = Time.time + SearchTime;
 
-            //Stops the Enemy
-            _rb2d.velocity = new Vector2(0, 0);
-            _playerLastPos = GameManager.Manager.Player.transform.position;
+            //Sight
+            if(hit.collider != null && hit.collider.CompareTag("Player")) {
+                //Stops the Enemy
+                _rb2d.velocity = new Vector2(0, 0);
+                _playerLastPos = GameManager.Manager.Player.transform.position;
 
-            //Changes _state and sprite
-            _state = States.Searching;
-            GameManager.Manager.Heard++;
-            transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Chasing;
-            _commentHandler.HearComments();
+                //Changes _state and sprite
+                _state = States.Chase;
+                GameManager.Manager.Spotters++;
+                transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Gun;
+                _commentHandler.ChaseComments();
+                return;
+            }
+
+            if(GameManager.Manager.Player.GetComponent<Rigidbody2D>().velocity.magnitude > 0.1f) {
+                //Stops the Enemy
+                _rb2d.velocity = new Vector2(0, 0);
+                _playerLastPos = GameManager.Manager.Player.transform.position;
+
+                //Changes _state and sprite
+                _state = States.Searching;
+                GameManager.Manager.Heard++;
+                transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Chasing;
+                _commentHandler.HearComments();
+            }
         }
     }
 
