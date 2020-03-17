@@ -44,4 +44,11 @@ public class PlayerMovement : MonoBehaviour
         if (rb2d.velocity.magnitude > 0.1f)
             TF.rotation = Quaternion.LookRotation(transform.forward, rb2d.velocity.normalized);
     }
+
+    private void OnTriggerEnter2D(Collider2D other) {
+        if(other.CompareTag("Money")) {
+            GameManager.Manager.CurrentCoins++;
+            Destroy(other.gameObject);
+        }
+    }
 }

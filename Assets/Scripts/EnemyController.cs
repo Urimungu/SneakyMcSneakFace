@@ -7,7 +7,7 @@ public class EnemyController : MonoBehaviour {
     public Sprite Walking, Chasing, Gun;
     private Transform _enemyTransform;
     private Rigidbody2D _rb2d;
-    private CommentHandler _commentHandler;
+    public CommentHandler _commentHandler;
 
     //Stats
     public float Speed = 10, RunSpeed = 15;
@@ -40,7 +40,6 @@ public class EnemyController : MonoBehaviour {
 
     private void Awake() {
         //Sets the References
-        _commentHandler = GetComponent<CommentHandler>();
         _rb2d = GetComponent<Rigidbody2D>();
         _enemyTransform = transform;
         _state = States.Patrol;
@@ -101,8 +100,10 @@ public class EnemyController : MonoBehaviour {
         _enemyTransform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg);
 
         //If he sees the player and is chasing him
-        if ((GameManager.Manager.Player.transform.position - _enemyTransform.position).magnitude > ChaseRadius) {
+        if((GameManager.Manager.Player.transform.position - _enemyTransform.position).magnitude > ChaseRadius) {
             Movement(GameManager.Manager.Player.transform.position, true);
+        } else {
+            GameManager.Manager.CaughtPlayer();
         }
 
     }
@@ -136,6 +137,12 @@ public class EnemyController : MonoBehaviour {
 
     //Raycasts towards the player
     private bool DetectPlayer() {
+        Debug.DrawRay(_enemyTransform.position, _enemyTransform.right * HearRadius, Color.red);
+        Debug.DrawRay(_enemyTransform.position, (_enemyTransform.right + (_enemyTransform.up / ViewAngle)) * HearRadius, Color.red);
+        Debug.DrawRay(_enemyTransform.position, (_enemyTransform.right - (_enemyTransform.up / ViewAngle)) * HearRadius, Color.red);
+        Debug.DrawRay(_enemyTransform.position, (_enemyTransform.right + (_enemyTransform.up / ViewAngle / 2)) * HearRadius, Color.red);
+        Debug.DrawRay(_enemyTransform.position, (_enemyTransform.right - (_enemyTransform.up / ViewAngle / 2)) * HearRadius, Color.red);
+
         //Detects if the player is in front of the enemy
         RaycastHit2D hit = Physics2D.Raycast(_enemyTransform.position, _enemyTransform.right, ViewDistance, ViewLayerMask);
         if (hit.collider != null && hit.collider.tag == "Player")
@@ -165,6 +172,11 @@ public class EnemyController : MonoBehaviour {
         return false;
     }
 
+    void OnDrawGizmos() {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, HearRadius);
+    }
+
     private void Patrol() {
         //Don't run if there is no positions to move to
         if (SearchPoint.Count == 0)
@@ -186,11 +198,10 @@ public class EnemyController : MonoBehaviour {
         var hit = Physics2D.Raycast(_enemyTransform.position, (_enemyTransform.position - GameManager.Manager.Player.transform.position).normalized, HearRadius);
 
         //If the enemy hears the player by getting to close. If the player is behind a wall, he will get alerted
-        if ((_enemyTransform.position - GameManager.Manager.Player.transform.position).magnitude <= HearRadius) {
-            _timer = Time.time + SearchTime;
+        if (Vector3.Distance(_enemyTransform.position, GameManager.Manager.Player.transform.position) <= HearRadius) {
 
             //Sight
-            if(hit.collider != null && hit.collider.CompareTag("Player")) {
+            if(DetectPlayer()) {
                 //Stops the Enemy
                 _rb2d.velocity = new Vector2(0, 0);
                 _playerLastPos = GameManager.Manager.Player.transform.position;
@@ -205,6 +216,7 @@ public class EnemyController : MonoBehaviour {
 
             if(GameManager.Manager.Player.GetComponent<Rigidbody2D>().velocity.magnitude > 0.1f) {
                 //Stops the Enemy
+                _timer = Time.time + SearchTime;
                 _rb2d.velocity = new Vector2(0, 0);
                 _playerLastPos = GameManager.Manager.Player.transform.position;
 

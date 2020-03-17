@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
 {
     //References
     public static GameManager Manager;
+    public UIManager UImanager;
 
     [Header("References")]
     public GameObject Player;
@@ -17,6 +18,10 @@ public class GameManager : MonoBehaviour
     public enum DetectionLevel { Hidden, Heard, Spotted}
     public DetectionLevel DetectedLevel;
     public int Heard, Spotters;
+    public int TotalCoins, CurrentCoins;
+
+    //Variables
+    private bool _isRunning;
 
     //Creates a Singleton for the Game Manager
     private void Awake() {
@@ -31,8 +36,10 @@ public class GameManager : MonoBehaviour
     }
 
     private void Update() {
-        if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName("LevelOne"))
-            RunDetectionLevel();
+        if(SceneManager.GetActiveScene() != SceneManager.GetSceneByName("LevelOne"))
+            return;
+        
+        RunDetectionLevel();
     }
 
     private void RunDetectionLevel() {
@@ -45,4 +52,39 @@ public class GameManager : MonoBehaviour
 
     }
 
+    //Scene Loader Finite State Machine
+    public void SceneManagerState(string state) {
+        switch(state) {
+            case "TitleScreen": SceneManager.LoadScene("TitleScreen");  break;
+            case "LevelOne": 
+                SceneManager.LoadScene("LevelOne");
+                CurrentCoins = 0;
+            break;
+            case "WinScreen": SceneManager.LoadScene("WinScreen");    break;
+            case "LoseScreen": SceneManager.LoadScene("LoseScreen");   break;
+            case "Quit": Application.Quit(); break;
+            default:    print("Invalid State Detected.");  break;
+        }
+    }
+
+    public void CaughtPlayer() {
+        Player.GetComponent<PlayerMovement>().CanMove = false;
+        Player.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0);
+        UImanager.SendMessage("YOU HAVE BEEN CAUGHT");
+        if(!_isRunning) {
+            _isRunning = true;
+            StartCoroutine(LoseScreen());
+        }
+    }
+
+    IEnumerator LoseScreen() {
+        for(int i = 0; i < 60; i++) {
+            yield return new WaitForSeconds(0.1f);
+            Camera.main.orthographicSize -= 0.03f;
+            UImanager.SetLoseAlpha(0.03f);
+        }
+
+        SceneManagerState("LoseScreen");
+        _isRunning = false;
+    }
 }

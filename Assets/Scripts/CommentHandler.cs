@@ -8,8 +8,8 @@ public class CommentHandler : MonoBehaviour
 {
     //Variables
     public Text Text;
-    public Canvas CanvasHolder;
     public float DisplayTime = 3;
+    public Transform Target;
 
     //Messages
     readonly List<string> _idleComments = new List<string> {
@@ -39,14 +39,13 @@ public class CommentHandler : MonoBehaviour
 
     //Functions
     private void Start() {
-        Text = transform.Find("Canvas").GetChild(0).GetComponent<Text>();
-        CanvasHolder = transform.Find("Canvas").GetComponent<Canvas>();
+        Text = transform.GetChild(0).GetComponent<Text>();
         Text.text = "";
 
     }
 
     private void Update() {
-        CanvasHolder.transform.rotation = Quaternion.identity;
+        transform.position = Target.position;
     }
 
     public void IdleComments() {
